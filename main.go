@@ -32,38 +32,9 @@ func main() {
 		}
 
 		//
-		// Scenario 1: deploying an image from Docker Hub.
-		// The example uses an nginx base image
-		// Image: https://hub.docker.com/_/nginx
-		//
-		imageInDockerHub := "nginx"
-		helloApp, err := web.NewWebApp(ctx, "helloApp", &web.WebAppArgs{
-			ResourceGroupName: resourceGroup.Name,
-			ServerFarmId:      plan.ID(),
-			SiteConfig: &web.SiteConfigArgs{
-				AppSettings: web.NameValuePairArray{
-					&web.NameValuePairArgs{
-						Name:  pulumi.String("WEBSITES_ENABLE_APP_SERVICE_STORAGE"),
-						Value: pulumi.String("false"),
-					},
-				},
-				AlwaysOn:       pulumi.Bool(true),
-				LinuxFxVersion: pulumi.String(fmt.Sprintf("%v%v", "DOCKER|", imageInDockerHub)),
-			},
-			HttpsOnly: pulumi.Bool(true),
-		})
-		if err != nil {
-			return err
-		}
-
-		ctx.Export("helloEndpoint", helloApp.DefaultHostName.ApplyT(func(defaultHostName string) (string, error) {
-			return fmt.Sprintf("%v%v", "https://", defaultHostName), nil
-		}).(pulumi.StringOutput))
-
-		//
 		// Scenario 2: deploying a custom image from Azure Container Registry.
 		//
-		customImage := "node-app"
+		customImage := "nginx"
 		registry, err := containerregistry.NewRegistry(ctx, "registry", &containerregistry.RegistryArgs{
 			ResourceGroupName: resourceGroup.Name,
 			Sku: &containerregistry.SkuArgs{
