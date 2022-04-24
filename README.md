@@ -1,34 +1,45 @@
 # Simple project
 
-Recreate problem, using an IaC tool and templates. 
-
-I will try pulumi an use it for both, that is to get a project up and running and deploy to cloud. I prefer to create a walking skelleton and focus on getting the feedback loop as quick as possible. And work from there.
-
-# Template
-A go project build with docker that deploys with pulumi to azure 
-
-Selected:
-* [azure-go-appservice-docker](https://github.com/pulumi/examples/tree/master/azure-go-appservice-docker)
+Solve problem of password in cleartext by hashing the password with openssl
 
 
-## Requirements:
-*  Access to azure and az tool installed
-*  Access to pulumi and pulumi tool installed
-*  Access to github and git installed
-*  Golang tool installed
-
-Pull template by running script
+Creata user: 
 ```
-./get-template.sh
+rm nginx/.htpasswd
+echo -n 'jansc:' > nginx/.htpasswd
 ```
+
+## Openssl options
+We use the MD5-based password algorithm, Apache variant that NGINX supports
+```
+$ openssl passwd --help
+Usage: passwd [options] [passwords]
+where options are
+-crypt             standard Unix password algorithm (default)
+-1                 MD5-based password algorithm
+-apr1              MD5-based password algorithm, Apache variant
+-salt string       use provided salt
+-in file           read passwords from file
+-stdin             read passwords from stdin
+-noverify          never verify when reading password from terminal
+-quiet             no warnings
+-table             format output as table
+-reverse           switch table columns
+```
+
+## Hash password 
+
+```
+openssl passwd -apr1 >> .htpasswd
+```
+
 
 Try it out
 ```
-pulumi stack init dev
-az login
-pulumi config set azure-native:location northeurope
-docker login
 pulumi up
+
+# if requested input, and rerun pulumi up.
+pulumi config set azure-native:location northeurope
 ```
 
 clean up 
