@@ -1,2 +1,8 @@
 config:
   azure-native:location: northeurope
+  azure-native:resourceGroupName: solutionUsingHashResourceGroup
+  azure:clientId: 989ff8e4-eb31-4f0e-b06f-f50365c5f1a3
+  azure:clientSecret:
+    secure: AAABAPda2uu1uq8Mh5XKFt5aDRmOjLaighzu3GazZLaCaGknby9QRjHh55oRCN4GZ7y4mgwXgXGHHKRXxfXT/Ul/
+  azure:subscriptionId: 850061f0-60cb-4341-b7c1-14464feab18a
+  azure:tenantId: 6ee0d7d5-0cde-4c39-832c-f9a8a2c222e1
