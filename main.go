@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pulumi/pulumi-azure-native/sdk/go/azure/containerregistry"
 	"github.com/pulumi/pulumi-azure-native/sdk/go/azure/resources"
@@ -13,11 +14,14 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
+
+		// create a ResourceGroup in Azure.
 		resourceGroup, err := resources.NewResourceGroup(ctx, "appservice-docker-rg", nil)
 		if err != nil {
 			return err
 		}
 
+		// create a AppServicePlan in Azure.
 		plan, err := web.NewAppServicePlan(ctx, "plan", &web.AppServicePlanArgs{
 			ResourceGroupName: resourceGroup.Name,
 			Kind:              pulumi.String("Linux"),
@@ -31,9 +35,7 @@ func main() {
 			return err
 		}
 
-		//
-		// Scenario 2: deploying a custom image from Azure Container Registry.
-		//
+		// deploying a custom image from Azure Container Registry.
 		customImage := "nginx"
 		registry, err := containerregistry.NewRegistry(ctx, "registry", &containerregistry.RegistryArgs{
 			ResourceGroupName: resourceGroup.Name,
@@ -46,19 +48,23 @@ func main() {
 			return err
 		}
 
+		//Azure credentials
 		credentials := containerregistry.ListRegistryCredentialsOutput(ctx, containerregistry.ListRegistryCredentialsOutputArgs{
 			RegistryName:      registry.Name,
 			ResourceGroupName: resourceGroup.Name,
 		})
-
 		adminUsername := credentials.Username().Elem()
 		adminPassword := credentials.Passwords().Index(pulumi.Int(0)).Value().Elem()
+
+		//Get PAGE_PASSWORD from environment
+		pagePassword := os.Getenv("PAGE_PASSWORD")
 
 		myImage, err := docker.NewImage(ctx, customImage, &docker.ImageArgs{
 			ImageName: registry.LoginServer.ApplyT(func(result string) (string, error) {
 				return fmt.Sprintf("%s/%s:v1.0.0", result, customImage), nil
 			}).(pulumi.StringOutput),
-			Build: &docker.DockerBuildArgs{Context: pulumi.String(fmt.Sprintf("./%s", customImage))},
+			//Pass PAGE_PASSWORD to Dockerfile
+			Build: &docker.DockerBuildArgs{Context: pulumi.String(fmt.Sprintf("./%s", customImage)), Args: pulumi.StringMap{"PAGE_PASSWORD": pulumi.String(pagePassword)}},
 			Registry: &docker.ImageRegistryArgs{
 				Server:   registry.LoginServer,
 				Username: adminUsername,
@@ -69,6 +75,7 @@ func main() {
 			return err
 		}
 
+		//Go ahead and install container in Azure
 		getStartedApp, err := web.NewWebApp(ctx, "getStartedApp", &web.WebAppArgs{
 			ResourceGroupName: resourceGroup.Name,
 			ServerFarmId:      plan.ID(),
@@ -108,6 +115,7 @@ func main() {
 			return err
 		}
 
+		//Get endpoint
 		ctx.Export("getStartedEndpoint", getStartedApp.DefaultHostName.ApplyT(func(defaultHostName string) (string, error) {
 			return fmt.Sprintf("%v%v", "https://", defaultHostName), nil
 		}).(pulumi.StringOutput))
