@@ -3,7 +3,7 @@
 Solve problem of password in cleartext by hashing the password with openssl
 
 
-Creata user: 
+Create a user: 
 ```
 rm nginx/.htpasswd
 echo -n 'jansc:' > nginx/.htpasswd
@@ -33,13 +33,9 @@ where options are
 openssl passwd -apr1 >> .htpasswd
 ```
 
-
 Try it out
 ```
 pulumi up
-
-# if requested input, and rerun pulumi up.
-pulumi config set azure-native:location northeurope
 ```
 
 clean up 
