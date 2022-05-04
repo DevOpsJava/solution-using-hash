@@ -12,3 +12,4 @@ clean up
 pulumi destroy
 pulumi stack rm dev
 ```
+
