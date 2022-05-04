@@ -1,3 +1,4 @@
+ARG GO_VARIANT="1"
 ARG PULUMI_VERSION=latest
 FROM debian:11-slim AS builder
 RUN apt-get update -y && \
@@ -17,16 +18,19 @@ RUN if [ "$PULUMI_VERSION" = "latest" ]; then \
 
 # [Choice] Go version (use -bullseye variants on local arm64/Apple Silicon): 1, 1.16, 1.17, 1-bullseye, 1.16-bullseye, 1.17-bullseye, 1-buster, 1.16-buster, 1.17-buster
 ARG VARIANT="1.18-bullseye"
-FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
+FROM mcr.microsoft.com/vscode/devcontainers/go:0-${GO_VARIANT}
 
 # [Choice] Node.js version: none, lts/*, 16, 14, 12, 10
 ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
 COPY --from=builder /root/.pulumi/bin/pulumi /pulumi/bin/pulumi
-COPY --from=builder /root/.pulumi/bin/*-go* /pulumi/bin/
-
+COPY --from=builder /root/.pulumi/bin/* /pulumi/bin/
 ENV PATH "/pulumi/bin:${PATH}"
+
+ENV GOOS "linux"
+ENV GOARCH "amd64"
+
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
